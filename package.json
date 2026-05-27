@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev:mock": "vite --mode mock",
+    "build": "bun run build:app",
+    "build:app": "tsc -b && vite build",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "msw:init": "msw init public"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.14",
@@ -27,8 +30,14 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "msw": "^2.14.6",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

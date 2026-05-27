@@ -1,33 +1,60 @@
-import { test, expect } from 'bun:test'
-import { buildHealthUrl, fetchHealthStatus } from '../src/services/healthApi'
-import { createMockHealthApi } from '../src/mocks/healthApiMock'
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test'
+import { http, HttpResponse } from 'msw'
+import {
+  createHealthErrorHandlers,
+  createHealthHandlers,
+  MOCK_HEALTH_MESSAGE,
+} from '../src/mocks/handlers/health'
+import { server } from '../src/mocks/server'
+import {
+  buildHealthUrl,
+  DEFAULT_API_BASE_URL,
+  fetchHealthStatus,
+} from '../src/services/healthApi'
 
-test('buildHealthUrl uses the default base URL when none is provided', () => {
-  expect(buildHealthUrl()).toBe('http://localhost:3000/health')
+const testBaseUrl = DEFAULT_API_BASE_URL
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'error' })
 })
 
-test('buildHealthUrl respects an explicit custom base URL', () => {
-  expect(buildHealthUrl('https://api.example.com')).toBe('https://api.example.com/health')
+afterEach(() => {
+  server.resetHandlers()
 })
 
-test('mock health API returns an ok status payload', async () => {
-  const mockApi = createMockHealthApi()
-  const result = await mockApi.fetchHealthStatus()
-
-  expect(result.status).toBe('ok')
-  expect(typeof result.timestamp).toBe('string')
-  expect(result.message).toBe('Mock backend connectivity confirmed.')
+afterAll(() => {
+  server.close()
 })
 
-test('fetchHealthStatus throws when the response contract is invalid', async () => {
-  const fakeFetch = async () => ({
-    ok: true,
-    status: 200,
-    statusText: 'OK',
-    json: async () => ({ bad: 'payload' }),
-  }) as Response
+describe('fetchHealthStatus with MSW', () => {
+  test('returns mocked health payload on success', async () => {
+    server.use(...createHealthHandlers())
 
-  await expect(fetchHealthStatus(fakeFetch as unknown as typeof fetch)).rejects.toThrow(
-    'Health API response did not match the expected contract',
-  )
+    const result = await fetchHealthStatus(fetch, testBaseUrl)
+
+    expect(result.status).toBe('ok')
+    expect(result.timestamp).toBeString()
+    expect(result.message).toBe(MOCK_HEALTH_MESSAGE)
+  })
+
+  test('throws when health endpoint returns non-OK status', async () => {
+    server.use(...createHealthErrorHandlers(503))
+
+    await expect(fetchHealthStatus(fetch, testBaseUrl)).rejects.toThrow(
+      'Health API request failed: 503',
+    )
+  })
+
+  test('throws when response body does not match contract', async () => {
+    server.use(
+      http.get(
+        ({ request }) => new URL(request.url).pathname === '/health',
+        () => HttpResponse.json({ unexpected: true }),
+      ),
+    )
+
+    await expect(fetchHealthStatus(fetch, testBaseUrl)).rejects.toThrow(
+      'Health API response did not match the expected contract',
+    )
+  })
 })

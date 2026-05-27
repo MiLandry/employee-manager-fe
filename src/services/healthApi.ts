@@ -8,11 +8,7 @@ export const DEFAULT_API_BASE_URL = 'http://localhost:3000'
 export const API_HEALTH_PATH = '/health'
 
 const getEnvApiBaseUrl = (): string => {
-  if (typeof import.meta !== 'undefined' && 'env' in import.meta) {
-    const env = (import.meta as any).env
-    return env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL
-  }
-  return DEFAULT_API_BASE_URL
+  return import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL
 }
 
 export const buildHealthUrl = (baseUrl?: string): string => {

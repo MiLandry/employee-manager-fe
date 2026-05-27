@@ -48,7 +48,7 @@ To enable frontend work without backend availability, the project uses **Mock Se
 
 - `src/services/healthApi.ts` — client contract and `fetchHealthStatus` (always uses `fetch`)
 - `src/mocks/handlers/health.ts` — MSW handlers returning `HealthStatus` JSON for `GET /health`
-- `src/mocks/browser.ts` — starts the MSW service worker in Vite dev when enabled
+- `src/mocks/browser.ts` — starts the MSW service worker when running `bun run dev:mock`
 - `src/mocks/server.ts` — `setupServer` for Bun tests using the same handlers
 
 The UI does not use a separate in-memory mock client. MSW keeps development and tests on the same network path as production.
@@ -56,23 +56,25 @@ The UI does not use a separate in-memory mock client. MSW keeps development and 
 Enable mocking in development:
 
 ```bash
-VITE_ENABLE_MSW=true yarn dev
+bun run dev:mock
 ```
 
-Run `yarn msw init public` once to generate `public/mockServiceWorker.js`.
+Run `bun run msw:init` once to generate `public/mockServiceWorker.js`.
 
 ## Network configuration
 
-The API base URL is configurable via environment variables in Vite:
+Environment variables (see `.env.example`):
 
-- `VITE_API_BASE_URL` — base URL for runtime API requests (default `http://localhost:3000`)
-- `VITE_ENABLE_MSW` — when `true`, starts the MSW browser worker before the app renders
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `VITE_API_BASE_URL` | `http://localhost:3000` | BFF base URL for `fetchHealthStatus` |
 
 Default behaviors:
 
-- development defaults to `http://localhost:3000`
 - the URL is normalized so requests do not duplicate trailing slashes
-- MSW is off by default so a running BFF is used; set `VITE_ENABLE_MSW=true` for backend-free UI work
+- MSW runs only when started via `bun run dev:mock` (`import.meta.env.MODE === 'mock'`)
+- `bun run dev` expects a running BFF
+- the baseline page in `App.tsx` calls `fetchHealthStatus` on mount and surfaces success or error state
 
 ## Testing and tooling
 

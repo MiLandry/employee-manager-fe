@@ -1,6 +1,20 @@
-# React + TypeScript + Vite
+# Employee Manager — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Baseline React + TypeScript + Vite app that verifies BFF connectivity via `GET /health`, with optional [MSW](https://mswjs.io/) mocking for backend-free development.
+
+## Environment variables
+
+Copy the example file and adjust as needed:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_API_BASE_URL` | `http://localhost:3000` | BFF base URL for API requests |
+
+MSW is controlled by scripts only (not env vars): use `bun run dev:mock` to enable mocking.
 
 ## Frontend Architecture
 
@@ -15,11 +29,15 @@ Key architecture decisions:
 
 ## Development Tooling
 
-- `yarn dev` starts the Vite development server.
-- `yarn build` compiles the app and bundles production assets.
-- `yarn lint` validates TypeScript and React code using ESLint.
-- `bun test` runs the frontend test harness with Bun's built-in test runner.
-- `bun test --watch` runs tests in watch mode.
+- `bun run dev` (or `bun dev`) — Vite dev server against a live BFF (MSW off).
+- `bun run dev:mock` — Vite `--mode mock`; starts MSW and mocks `GET /health`.
+- `bun run build`, `bun build:app`, or `bun run build:app` — TypeScript check + Vite production bundle.
+- `bun run lint` — ESLint for TypeScript and React.
+- `bun test` — frontend tests (Bun test runner).
+- `bun run test:watch` — tests in watch mode.
+- `bun run msw:init` — (re)generate `public/mockServiceWorker.js`.
+
+> **Note:** `bun build` alone is Bun’s bundler CLI and will fail with “Missing entrypoints”. This project uses Vite; always run **`bun run build`** or **`bun build:app`**.
 
 ## API and Mocking (MSW)
 
@@ -27,19 +45,20 @@ This project uses **Mock Service Worker** to mock the BFF health contract withou
 
 - `src/services/healthApi.ts` — health contract types and `fetchHealthStatus`
 - `src/mocks/handlers/health.ts` — MSW handlers for `GET /health`
-- `src/mocks/browser.ts` — browser worker used when `VITE_ENABLE_MSW=true`
+- `src/mocks/browser.ts` — browser worker (started only in `dev:mock` mode)
 - `src/mocks/server.ts` — `setupServer` for Bun tests
 
 First-time setup:
 
 ```bash
-yarn msw init public
+bun run msw:init
+cp .env.example .env
 ```
 
 Run dev with mocked health (no backend):
 
 ```bash
-VITE_ENABLE_MSW=true yarn dev
+bun run dev:mock
 ```
 
 See `system-specs/specs/001-baseline-app-poc/quickstart.md` for the full verification path.
