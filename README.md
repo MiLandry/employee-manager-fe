@@ -36,6 +36,17 @@ Key architecture decisions:
 - `bun test` — frontend tests (Bun test runner).
 - `bun run test:watch` — tests in watch mode.
 - `bun run msw:init` — (re)generate `public/mockServiceWorker.js`.
+- `bun run clean` — remove `dist/`, `dist-ssr/`, and Vite/TypeScript caches under `node_modules`.
+- `bun run nuke` — `clean` plus remove `node_modules/`, then `bun install` (near–fresh-clone reset; keeps `bun.lock` and `.env`).
+
+### Cleanup
+
+| Command | Removes | Keeps |
+|---------|---------|-------|
+| `bun run clean` | `dist/`, `dist-ssr/`, `node_modules/.tmp/`, `node_modules/.vite/` | `node_modules/`, source, lockfile, `.env` |
+| `bun run nuke` | everything `clean` removes, plus `node_modules/` (then reinstalls) | `src/`, `tests/`, `public/`, `bun.lock`, `.env` |
+
+After `nuke`, run `bun run dev` or `bun run dev:mock` as usual. You do not need `msw:init` again unless you deleted `public/mockServiceWorker.js`.
 
 > **Note:** `bun build` alone is Bun’s bundler CLI and will fail with “Missing entrypoints”. This project uses Vite; always run **`bun run build`** or **`bun build:app`**.
 

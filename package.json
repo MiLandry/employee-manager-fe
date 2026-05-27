@@ -12,7 +12,9 @@
     "test:watch": "bun test --watch",
     "lint": "eslint .",
     "preview": "vite preview",
-    "msw:init": "msw init public"
+    "msw:init": "msw init public",
+    "clean": "bun scripts/clean.ts",
+    "nuke": "bun scripts/nuke.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.14",
