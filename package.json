@@ -7,6 +7,7 @@
     "dev": "vite",
     "dev:mock": "vite --mode mock",
     "build": "bun run build:app",
+    "prebuild:app": "bun run codegen:api",
     "build:app": "tsc -b && vite build",
     "test": "bun test",
     "test:watch": "bun test --watch",

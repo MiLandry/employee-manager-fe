@@ -31,23 +31,23 @@ Key architecture decisions:
 
 - `bun run dev` (or `bun dev`) — Vite dev server against a live BFF (MSW off).
 - `bun run dev:mock` — Vite `--mode mock`; starts MSW and mocks `GET /health`.
-- `bun run build`, `bun build:app`, or `bun run build:app` — TypeScript check + Vite production bundle.
+- `bun run build`, `bun build:app`, or `bun run build:app` — runs `prebuild:app` (API codegen), then TypeScript check + Vite production bundle.
 - `bun run lint` — ESLint for TypeScript and React.
 - `bun test` — frontend tests (Bun test runner).
 - `bun run test:watch` — tests in watch mode.
 - `bun run msw:init` — (re)generate `public/mockServiceWorker.js`.
-- `bun run codegen:api` — regenerate `src/generated/openapi.ts` from the sibling `system-specs` spec 002 OpenAPI file (see repo layout in `system-specs/specs/002-backend-connectivity/contracts/README.md`).
-- `bun run clean` — remove `dist/`, `dist-ssr/`, and Vite/TypeScript caches under `node_modules`.
+- `bun run codegen:api` — regenerate `src/generated/openapi.ts` from the sibling `system-specs` spec 002 OpenAPI file (`prebuild:app` runs this before `build:app`).
+- `bun run clean` — remove `dist/`, `dist-ssr/`, `src/generated/` (OpenAPI client), and Vite/TypeScript caches under `node_modules`.
 - `bun run nuke` — `clean` plus remove `node_modules/`, then `bun install` (near–fresh-clone reset; keeps `bun.lock` and `.env`).
 
 ### Cleanup
 
 | Command | Removes | Keeps |
 |---------|---------|-------|
-| `bun run clean` | `dist/`, `dist-ssr/`, `node_modules/.tmp/`, `node_modules/.vite/` | `node_modules/`, source, lockfile, `.env` |
-| `bun run nuke` | everything `clean` removes, plus `node_modules/` (then reinstalls) | `src/`, `tests/`, `public/`, `bun.lock`, `.env` |
+| `bun run clean` | `dist/`, `dist-ssr/`, `src/generated/`, `node_modules/.tmp/`, `node_modules/.vite/` | `node_modules/`, hand-written `src/`, lockfile, `.env` |
+| `bun run nuke` | everything `clean` removes, plus `node_modules/` (then reinstalls) | hand-written `src/`, `tests/`, `public/`, `bun.lock`, `.env` |
 
-After `nuke`, run `bun run dev` or `bun run dev:mock` as usual. You do not need `msw:init` again unless you deleted `public/mockServiceWorker.js`.
+After `clean` or `nuke`, run `bun run build:app` (or `bun run dev`) to regenerate `src/generated/openapi.ts` via `prebuild:app`. After `nuke`, you do not need `msw:init` again unless you deleted `public/mockServiceWorker.js`.
 
 > **Note:** `bun build` alone is Bun’s bundler CLI and will fail with “Missing entrypoints”. This project uses Vite; always run **`bun run build`** or **`bun build:app`**.
 
