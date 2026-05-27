@@ -36,6 +36,7 @@ Key architecture decisions:
 - `bun test` — frontend tests (Bun test runner).
 - `bun run test:watch` — tests in watch mode.
 - `bun run msw:init` — (re)generate `public/mockServiceWorker.js`.
+- `bun run codegen:api` — regenerate `src/generated/openapi.ts` from the sibling `system-specs` spec 002 OpenAPI file (see repo layout in `system-specs/specs/002-backend-connectivity/contracts/README.md`).
 - `bun run clean` — remove `dist/`, `dist-ssr/`, and Vite/TypeScript caches under `node_modules`.
 - `bun run nuke` — `clean` plus remove `node_modules/`, then `bun install` (near–fresh-clone reset; keeps `bun.lock` and `.env`).
 

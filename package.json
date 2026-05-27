@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "msw:init": "msw init public",
     "clean": "bun scripts/clean.ts",
-    "nuke": "bun scripts/nuke.ts"
+    "nuke": "bun scripts/nuke.ts",
+    "codegen:api": "openapi-typescript ../system-specs/specs/002-backend-connectivity/contracts/openapi.yaml -o src/generated/openapi.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.14",
@@ -33,6 +34,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "msw": "^2.14.6",
+    "openapi-typescript": "^7.10.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"
