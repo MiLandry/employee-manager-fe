@@ -1,8 +1,6 @@
-export type HealthStatus = {
-  status: 'ok' | 'error'
-  timestamp: string
-  message?: string
-}
+import type { components } from '../generated/openapi'
+
+export type HealthStatus = components['schemas']['HealthResponse']
 
 export const DEFAULT_API_BASE_URL = 'http://localhost:3000'
 export const API_HEALTH_PATH = '/health'
@@ -14,6 +12,29 @@ const getEnvApiBaseUrl = (): string => {
 export const buildHealthUrl = (baseUrl?: string): string => {
   const normalizedBaseUrl = (baseUrl || getEnvApiBaseUrl()).replace(/\/$/, '')
   return `${normalizedBaseUrl}${API_HEALTH_PATH}`
+}
+
+function isHealthStatus(value: unknown): value is HealthStatus {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const record = value as Record<string, unknown>
+
+  const statusOk =
+    record.status === 'ok' || record.status === 'error'
+
+  const timestampOk = typeof record.timestamp === 'string'
+  const db = record.db
+  if (!db || typeof db !== 'object') {
+    return false
+  }
+  const dbRecord = db as Record<string, unknown>
+  const dbStatusOk = dbRecord.status === 'up' || dbRecord.status === 'down'
+  const dbErrorOk =
+    dbRecord.error === undefined || typeof dbRecord.error === 'string'
+
+  return Boolean(statusOk && timestampOk && dbStatusOk && dbErrorOk)
 }
 
 export const fetchHealthStatus = async (
@@ -33,9 +54,9 @@ export const fetchHealthStatus = async (
     throw new Error(`Health API request failed: ${response.status} ${response.statusText} - ${body}`)
   }
 
-  const payload = (await response.json()) as HealthStatus
+  const payload: unknown = await response.json()
 
-  if (!payload || typeof payload.status !== 'string' || typeof payload.timestamp !== 'string') {
+  if (!isHealthStatus(payload)) {
     throw new Error('Health API response did not match the expected contract')
   }
 

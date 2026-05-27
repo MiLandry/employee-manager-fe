@@ -6,11 +6,7 @@ import {
   MOCK_HEALTH_MESSAGE,
 } from '../src/mocks/handlers/health'
 import { server } from '../src/mocks/server'
-import {
-  buildHealthUrl,
-  DEFAULT_API_BASE_URL,
-  fetchHealthStatus,
-} from '../src/services/healthApi'
+import { DEFAULT_API_BASE_URL, fetchHealthStatus } from '../src/services/healthApi'
 
 const testBaseUrl = DEFAULT_API_BASE_URL
 

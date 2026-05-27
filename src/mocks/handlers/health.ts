@@ -13,6 +13,7 @@ export const createMockHealthStatus = (
   status: 'ok',
   timestamp: new Date().toISOString(),
   message: MOCK_HEALTH_MESSAGE,
+  db: { status: 'up' },
   ...overrides,
 })
 
@@ -27,16 +28,16 @@ export const createHealthHandlers = () => {
 }
 
 /**
- * Returns a failing health response for error-path testing.
+ * Returns a failing health response for error-path testing (matches runtime 503 ApiError shape).
  */
 export const createHealthErrorHandlers = (httpStatus = 503) => {
   return [
     http.get(isHealthCheckRequest, () =>
       HttpResponse.json(
-        createMockHealthStatus({
-          status: 'error',
-          message: 'MSW mock health check failed.',
-        }),
+        {
+          error: `Database unavailable: MSW simulated database outage`,
+          code: 'DATABASE_UNAVAILABLE',
+        },
         { status: httpStatus },
       ),
     ),

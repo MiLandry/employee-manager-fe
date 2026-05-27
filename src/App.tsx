@@ -81,6 +81,16 @@ function App() {
                   <dd>{healthView.health.message}</dd>
                 </div>
               )}
+              <div>
+                <dt>Database</dt>
+                <dd>{healthView.health.db.status}</dd>
+              </div>
+              {healthView.health.db.error && (
+                <div>
+                  <dt>Database error</dt>
+                  <dd>{healthView.health.db.error}</dd>
+                </div>
+              )}
             </dl>
           </div>
         )}
