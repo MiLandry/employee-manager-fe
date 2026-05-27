@@ -42,25 +42,37 @@ The BFF is responsible for serving UI-specific endpoints under a stable namespac
 
 The frontend should never call downstream services directly. Instead, the BFF provides the single network boundary for the application.
 
-## UI development autonomy
+## UI development autonomy (MSW)
 
-To enable frontend work without backend availability, the project includes a mock network implementation:
+To enable frontend work without backend availability, the project uses **Mock Service Worker (MSW)** to intercept HTTP requests:
 
-- `src/services/healthApi.ts` defines the real client-side contract and network helper
-- `src/mocks/healthApiMock.ts` provides a mock implementation with the same interface
+- `src/services/healthApi.ts` — client contract and `fetchHealthStatus` (always uses `fetch`)
+- `src/mocks/handlers/health.ts` — MSW handlers returning `HealthStatus` JSON for `GET /health`
+- `src/mocks/browser.ts` — starts the MSW service worker in Vite dev when enabled
+- `src/mocks/server.ts` — `setupServer` for Bun tests using the same handlers
 
-This allows the UI to be developed and tested against a stable mock contract before backend integration is complete.
+The UI does not use a separate in-memory mock client. MSW keeps development and tests on the same network path as production.
+
+Enable mocking in development:
+
+```bash
+VITE_ENABLE_MSW=true yarn dev
+```
+
+Run `yarn msw init public` once to generate `public/mockServiceWorker.js`.
 
 ## Network configuration
 
 The API base URL is configurable via environment variables in Vite:
 
-- `VITE_API_BASE_URL` — base URL for runtime API requests
+- `VITE_API_BASE_URL` — base URL for runtime API requests (default `http://localhost:3000`)
+- `VITE_ENABLE_MSW` — when `true`, starts the MSW browser worker before the app renders
 
 Default behaviors:
 
 - development defaults to `http://localhost:3000`
 - the URL is normalized so requests do not duplicate trailing slashes
+- MSW is off by default so a running BFF is used; set `VITE_ENABLE_MSW=true` for backend-free UI work
 
 ## Testing and tooling
 

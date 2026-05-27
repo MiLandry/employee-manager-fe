@@ -10,7 +10,7 @@ Key architecture decisions:
 
 - The UI uses a JSON REST contract against backend endpoints such as `/health` and `/api/*`.
 - A BFF-style backend layer is the source of truth for frontend API responses, allowing the frontend to remain decoupled from downstream services.
-- A mock network implementation is provided so UI development can continue independently of backend availability.
+- [Mock Service Worker (MSW)](https://mswjs.io/) intercepts API requests in development and tests so UI work can continue without a running backend.
 - Bun is the chosen test harness runtime for frontend assertions.
 
 ## Development Tooling
@@ -21,14 +21,28 @@ Key architecture decisions:
 - `bun test` runs the frontend test harness with Bun's built-in test runner.
 - `bun test --watch` runs tests in watch mode.
 
-## API and Mocking
+## API and Mocking (MSW)
 
-This project includes a small health API service contract and a mock implementation for UI development autonomy:
+This project uses **Mock Service Worker** to mock the BFF health contract without changing production fetch code:
 
-- `src/services/healthApi.ts` defines the frontend health contract and REST helper functions.
-- `src/mocks/healthApiMock.ts` provides a mock health endpoint implementation for local UI development and test isolation.
+- `src/services/healthApi.ts` — health contract types and `fetchHealthStatus`
+- `src/mocks/handlers/health.ts` — MSW handlers for `GET /health`
+- `src/mocks/browser.ts` — browser worker used when `VITE_ENABLE_MSW=true`
+- `src/mocks/server.ts` — `setupServer` for Bun tests
 
-These abstractions make it possible to develop and test UI behavior without a running backend.
+First-time setup:
+
+```bash
+yarn msw init public
+```
+
+Run dev with mocked health (no backend):
+
+```bash
+VITE_ENABLE_MSW=true yarn dev
+```
+
+See `system-specs/specs/001-baseline-app-poc/quickstart.md` for the full verification path.
 
 ## React Compiler
 
