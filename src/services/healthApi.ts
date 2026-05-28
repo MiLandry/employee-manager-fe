@@ -2,6 +2,16 @@ import type { components } from '../generated/openapi'
 
 export type HealthStatus = components['schemas']['HealthResponse']
 
+export class HealthApiError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'HealthApiError'
+    this.status = status
+  }
+}
+
 export const DEFAULT_API_BASE_URL = 'http://localhost:3000'
 export const API_HEALTH_PATH = '/health'
 
@@ -51,7 +61,10 @@ export const fetchHealthStatus = async (
 
   if (!response.ok) {
     const body = await response.text()
-    throw new Error(`Health API request failed: ${response.status} ${response.statusText} - ${body}`)
+    throw new HealthApiError(
+      `Health API request failed: ${response.status} ${response.statusText} - ${body}`,
+      response.status,
+    )
   }
 
   const payload: unknown = await response.json()

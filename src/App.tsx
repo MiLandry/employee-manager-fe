@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   buildHealthUrl,
   fetchHealthStatus,
+  HealthApiError,
   type HealthStatus,
 } from './services/healthApi'
 import './App.css'
@@ -9,6 +10,8 @@ import './App.css'
 type HealthViewState =
   | { kind: 'loading' }
   | { kind: 'success'; health: HealthStatus }
+  | { kind: 'unauthorized'; message: string }
+  | { kind: 'forbidden'; message: string }
   | { kind: 'error'; message: string }
 
 function App() {
@@ -28,8 +31,23 @@ function App() {
         }
       } catch (error) {
         if (!cancelled) {
-          const message =
-            error instanceof Error ? error.message : 'Unknown health check error'
+          if (error instanceof HealthApiError && error.status === 401) {
+            setHealthView({
+              kind: 'unauthorized',
+              message: 'Authentication required. Use a valid session to access this endpoint.',
+            })
+            return
+          }
+
+          if (error instanceof HealthApiError && error.status === 403) {
+            setHealthView({
+              kind: 'forbidden',
+              message: 'Authenticated but not authorized to access this endpoint.',
+            })
+            return
+          }
+
+          const message = error instanceof Error ? error.message : 'Unknown health check error'
           setHealthView({ kind: 'error', message })
         }
       }
@@ -98,6 +116,20 @@ function App() {
         {healthView.kind === 'error' && (
           <div className="baseline__status baseline__status--error">
             <p className="baseline__headline">Connection failed</p>
+            <p className="baseline__error">{healthView.message}</p>
+          </div>
+        )}
+
+        {healthView.kind === 'unauthorized' && (
+          <div className="baseline__status baseline__status--error">
+            <p className="baseline__headline">Authentication required</p>
+            <p className="baseline__error">{healthView.message}</p>
+          </div>
+        )}
+
+        {healthView.kind === 'forbidden' && (
+          <div className="baseline__status baseline__status--error">
+            <p className="baseline__headline">Access forbidden</p>
             <p className="baseline__error">{healthView.message}</p>
           </div>
         )}
