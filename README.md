@@ -51,6 +51,25 @@ After `clean` or `nuke`, run `bun run build:app` (or `bun run dev`) to regenerat
 
 > **Note:** `bun build` alone is Bun’s bundler CLI and will fail with “Missing entrypoints”. This project uses Vite; always run **`bun run build`** or **`bun build:app`**.
 
+## CI
+
+This repo includes a frontend-only GitHub Actions workflow at `.github/workflows/ci.yml`.
+
+- Trigger: `pull_request` and pushes to `main`
+- Checks: install dependencies, lint, test, build
+- Codegen dependency: CI checks out `system-specs` and links it to `../system-specs` so `codegen:api` can resolve the canonical OpenAPI path during build
+- Fallback plan: if checkout/pathing fails in CI, temporarily gate on install/lint/test only, then restore build once the path issue is fixed
+- Deferred follow-up: multi-repo required-check governance and broader FE/BE policy hardening
+
+CI command parity:
+
+```bash
+bun install --frozen-lockfile
+bun run lint
+bun test
+bun run build
+```
+
 ## API and Mocking (MSW)
 
 This project uses **Mock Service Worker** to mock the BFF health contract without changing production fetch code:
