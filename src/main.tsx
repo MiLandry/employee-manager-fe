@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
@@ -5,6 +6,8 @@ import App from './App.tsx'
 
 /** MSW is enabled only via `bun run dev:mock` (Vite mode: mock). */
 const isMswMode = import.meta.env.MODE === 'mock'
+
+const queryClient = new QueryClient()
 
 async function enableMocking(): Promise<void> {
   if (!isMswMode) {
@@ -25,7 +28,9 @@ if (!rootElement) {
 void enableMocking().then(() => {
   createRoot(rootElement).render(
     <StrictMode>
-      <App />
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
     </StrictMode>,
   )
 })
