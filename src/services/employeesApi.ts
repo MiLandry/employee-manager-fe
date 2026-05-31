@@ -113,6 +113,10 @@ export const deleteEmployee = async (
     headers: buildMockAuthHeaders(role),
   })
 
+  if (response.status === 204) {
+    return
+  }
+
   if (!response.ok) {
     return parseApiError(response)
   }

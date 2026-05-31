@@ -63,6 +63,18 @@ export function EmployeeListPage() {
 
   const refreshEmployees = async () => {
     await queryClient.invalidateQueries({ queryKey: ['employees'] })
+    await queryClient.refetchQueries({ queryKey: ['employees'] })
+  }
+
+  const openEditDialog = (employee: Employee) => {
+    setFormMode('edit')
+    setSelectedEmployee(employee)
+    setFormOpen(true)
+  }
+
+  const openDeleteDialog = (employee: Employee) => {
+    setSelectedEmployee(employee)
+    setDeleteOpen(true)
   }
 
   const departments = useMemo(() => {
@@ -85,15 +97,21 @@ export function EmployeeListPage() {
         width: 180,
         sortable: false,
         filterable: false,
+        disableColumnMenu: true,
         renderCell: ({ row }) => (
-          <Stack direction="row" spacing={1}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ height: '100%', alignItems: 'center' }}
+            onClick={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
             <Button
               size="small"
               disabled={!canUpdateEmployees(role)}
-              onClick={() => {
-                setFormMode('edit')
-                setSelectedEmployee(row)
-                setFormOpen(true)
+              onClick={(event) => {
+                event.stopPropagation()
+                openEditDialog(row)
               }}
             >
               Edit
@@ -102,9 +120,9 @@ export function EmployeeListPage() {
               size="small"
               color="error"
               disabled={!canDeleteEmployees(role)}
-              onClick={() => {
-                setSelectedEmployee(row)
-                setDeleteOpen(true)
+              onClick={(event) => {
+                event.stopPropagation()
+                openDeleteDialog(row)
               }}
             >
               Delete
@@ -144,6 +162,11 @@ export function EmployeeListPage() {
               ))}
             </Select>
           </FormControl>
+          {role !== 'admin' && (
+            <Typography variant="caption" color="text.secondary">
+              Delete requires admin role
+            </Typography>
+          )}
         </Stack>
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
