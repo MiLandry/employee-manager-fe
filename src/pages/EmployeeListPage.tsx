@@ -63,18 +63,6 @@ export function EmployeeListPage() {
 
   const refreshEmployees = async () => {
     await queryClient.invalidateQueries({ queryKey: ['employees'] })
-    await queryClient.refetchQueries({ queryKey: ['employees'] })
-  }
-
-  const openEditDialog = (employee: Employee) => {
-    setFormMode('edit')
-    setSelectedEmployee(employee)
-    setFormOpen(true)
-  }
-
-  const openDeleteDialog = (employee: Employee) => {
-    setSelectedEmployee(employee)
-    setDeleteOpen(true)
   }
 
   const departments = useMemo(() => {
@@ -84,34 +72,26 @@ export function EmployeeListPage() {
 
   const columns = useMemo<GridColDef<Employee>[]>(
     () => [
-      { field: 'fullName', headerName: 'Name', flex: 1, minWidth: 160 },
-      { field: 'email', headerName: 'Email', flex: 1, minWidth: 180 },
-      { field: 'department', headerName: 'Department', flex: 1, minWidth: 140 },
-      { field: 'jobTitle', headerName: 'Title', flex: 1, minWidth: 140 },
-      { field: 'employmentStatus', headerName: 'Status', width: 120 },
-      { field: 'managerName', headerName: 'Manager', flex: 1, minWidth: 140 },
-      { field: 'startDate', headerName: 'Start', width: 120 },
+      { field: 'fullName', headerName: 'Name', flex: 1, minWidth: 140 },
+      { field: 'email', headerName: 'Email', flex: 1, minWidth: 160 },
+      { field: 'department', headerName: 'Department', flex: 1, minWidth: 120 },
+      { field: 'jobTitle', headerName: 'Title', flex: 1, minWidth: 120 },
+      { field: 'employmentStatus', headerName: 'Status', width: 110 },
       {
         field: 'actions',
         headerName: 'Actions',
         width: 180,
         sortable: false,
         filterable: false,
-        disableColumnMenu: true,
         renderCell: ({ row }) => (
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ height: '100%', alignItems: 'center' }}
-            onClick={(event) => event.stopPropagation()}
-            onMouseDown={(event) => event.stopPropagation()}
-          >
+          <Stack direction="row" spacing={1}>
             <Button
               size="small"
               disabled={!canUpdateEmployees(role)}
-              onClick={(event) => {
-                event.stopPropagation()
-                openEditDialog(row)
+              onClick={() => {
+                setFormMode('edit')
+                setSelectedEmployee(row)
+                setFormOpen(true)
               }}
             >
               Edit
@@ -120,9 +100,9 @@ export function EmployeeListPage() {
               size="small"
               color="error"
               disabled={!canDeleteEmployees(role)}
-              onClick={(event) => {
-                event.stopPropagation()
-                openDeleteDialog(row)
+              onClick={() => {
+                setSelectedEmployee(row)
+                setDeleteOpen(true)
               }}
             >
               Delete
@@ -162,11 +142,6 @@ export function EmployeeListPage() {
               ))}
             </Select>
           </FormControl>
-          {role !== 'admin' && (
-            <Typography variant="caption" color="text.secondary">
-              Delete requires admin role
-            </Typography>
-          )}
         </Stack>
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
