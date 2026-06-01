@@ -92,7 +92,7 @@ Run dev with mocked health (no backend):
 bun run dev:mock
 ```
 
-See `system-specs/specs/001-baseline-app-poc/quickstart.md` for the full verification path.
+See `system-specs/specs/architecture/001-baseline-app-poc/quickstart.md` for the full verification path.
 
 ## React Compiler
 

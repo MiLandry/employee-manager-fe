@@ -16,7 +16,7 @@
     "msw:init": "msw init public",
     "clean": "bun scripts/clean.ts",
     "nuke": "bun scripts/nuke.ts",
-    "codegen:api": "openapi-typescript ../system-specs/specs/002-backend-connectivity/contracts/openapi.yaml -o src/generated/openapi.ts && openapi-typescript ../system-specs/specs/features/008-employee-crud-mui/contracts/openapi.yaml -o src/generated/employees.openapi.ts"
+    "codegen:api": "openapi-typescript ../system-specs/specs/architecture/002-backend-connectivity/contracts/openapi.yaml -o src/generated/openapi.ts && openapi-typescript ../system-specs/specs/features/008-employee-crud-mui/contracts/openapi.yaml -o src/generated/employees.openapi.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
