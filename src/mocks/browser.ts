@@ -1,4 +1,4 @@
 import { setupWorker } from 'msw/browser'
-import { healthHandlers } from './handlers/health'
+import { graphqlHandlers } from './handlers/graphql'
 
-export const worker = setupWorker(...healthHandlers)
+export const worker = setupWorker(...graphqlHandlers)

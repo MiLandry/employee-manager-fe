@@ -1,4 +1,4 @@
 import { setupServer } from 'msw/node'
-import { healthHandlers } from './handlers/health'
+import { graphqlHandlers } from './handlers/graphql'
 
-export const server = setupServer(...healthHandlers)
+export const server = setupServer(...graphqlHandlers)
