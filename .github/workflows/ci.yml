@@ -29,7 +29,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.SYSTEM_SPECS_REPO }}
-          ref: ${{ env.SYSTEM_SPECS_REF }}
+          # Use the PR branch when present so codegen can read spec 010 before it lands on main.
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || env.SYSTEM_SPECS_REF }}
           path: system-specs
 
       - name: Link system-specs for codegen path
@@ -47,7 +48,7 @@ jobs:
         run: bun run lint
 
       - name: Test
-        run: bun test
+        run: bun run test
 
       - name: Build
         run: bun run build

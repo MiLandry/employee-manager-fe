@@ -9,7 +9,7 @@
     "build": "bun run build:app",
     "prebuild:app": "bun run codegen:graphql",
     "build:app": "tsc -b && vite build",
-    "test": "bun test",
+    "test": "bun run codegen:graphql && bun test",
     "test:watch": "bun test --watch",
     "lint": "eslint .",
     "preview": "vite preview",
