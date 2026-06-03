@@ -28,6 +28,7 @@ import {
   canCreateEmployees,
   canDeleteEmployees,
   canUpdateEmployees,
+  canViewCompensation,
   MOCK_ROLES,
   setRuntimeMockRole,
   type MockRole,
@@ -81,6 +82,33 @@ export function EmployeeListPage() {
       { field: 'department', headerName: 'Department', flex: 1, minWidth: 120 },
       { field: 'jobTitle', headerName: 'Title', flex: 1, minWidth: 120 },
       { field: 'employmentStatus', headerName: 'Status', width: 110 },
+      ...(canViewCompensation(role)
+        ? [
+            {
+              field: 'payGrade',
+              headerName: 'Pay grade',
+              width: 100,
+              valueGetter: (_value: unknown, row: Employee) =>
+                row.compensationSummary?.payGrade ?? '—',
+            },
+            {
+              field: 'annualBase',
+              headerName: 'Annual base',
+              width: 120,
+              valueGetter: (_value: unknown, row: Employee) => {
+                const summary = row.compensationSummary
+                if (!summary) {
+                  return '—'
+                }
+                return new Intl.NumberFormat(undefined, {
+                  style: 'currency',
+                  currency: summary.currency,
+                  maximumFractionDigits: 0,
+                }).format(summary.annualBase)
+              },
+            },
+          ]
+        : []),
       {
         field: 'actions',
         headerName: 'Actions',

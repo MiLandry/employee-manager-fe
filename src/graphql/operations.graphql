@@ -45,4 +45,14 @@ fragment EmployeeFields on Employee {
   location
   createdAt
   updatedAt
+  compensationSummary {
+    payGrade
+    currency
+    annualBase
+  }
+  lastPayStub {
+    periodEnd
+    netPay
+    currency
+  }
 }

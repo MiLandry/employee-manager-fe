@@ -1,8 +1,7 @@
 import type { CodegenConfig } from '@graphql-codegen/cli'
 
 const config: CodegenConfig = {
-  schema:
-    '../system-specs/specs/architecture/010-graphql-apollo-protocol/contracts/schema.graphql',
+  schema: '../employee-manager-router/supergraph.graphql',
   documents: ['src/graphql/**/*.graphql'],
   generates: {
     './src/generated/graphql/': {
