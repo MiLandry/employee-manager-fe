@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@mui/material'
 import { useState } from 'react'
-import type { Employee } from '../services/employeesApi'
+import type { Employee } from '../generated/graphql/graphql'
 
 type EmployeeDeleteDialogProps = {
   open: boolean

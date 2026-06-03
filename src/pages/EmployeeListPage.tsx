@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from '@apollo/client/react'
 import {
   Alert,
   Box,
@@ -11,28 +12,29 @@ import {
   Typography,
 } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { EmployeeDeleteDialog } from '../components/EmployeeDeleteDialog'
 import { EmployeeFormDialog } from '../components/EmployeeFormDialog'
 import {
-  createEmployee,
-  deleteEmployee,
-  EmployeesApiError,
-  listEmployees,
-  updateEmployee,
+  CreateEmployeeDocument,
+  DeleteEmployeeDocument,
+  EmployeesDocument,
+  UpdateEmployeeDocument,
   type Employee,
-} from '../services/employeesApi'
+  type EmployeeInput,
+} from '../generated/graphql/graphql'
+import { apolloClient } from '../lib/apolloClient'
 import {
   canCreateEmployees,
   canDeleteEmployees,
   canUpdateEmployees,
   MOCK_ROLES,
+  setRuntimeMockRole,
   type MockRole,
 } from '../services/mockAuth'
+import { GraphqlApiError, toGraphqlApiError } from '../services/graphqlErrors'
 
 export function EmployeeListPage() {
-  const queryClient = useQueryClient()
   const [role, setRole] = useState<MockRole>('admin')
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -47,28 +49,30 @@ export function EmployeeListPage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const employeesQuery = useQuery({
-    queryKey: ['employees', debouncedSearch, departmentFilter, role],
-    queryFn: () =>
-      listEmployees(
-        {
-          name: debouncedSearch || undefined,
-          department: departmentFilter || undefined,
-        },
-        fetch,
-        undefined,
-        role,
-      ),
+  useEffect(() => {
+    setRuntimeMockRole(role)
+    void apolloClient.refetchQueries({ include: ['Employees'] })
+  }, [role])
+
+  const employeesQuery = useQuery(EmployeesDocument, {
+    variables: {
+      name: debouncedSearch || undefined,
+      department: departmentFilter || undefined,
+    },
   })
 
+  const [createEmployeeMutation] = useMutation(CreateEmployeeDocument)
+  const [updateEmployeeMutation] = useMutation(UpdateEmployeeDocument)
+  const [deleteEmployeeMutation] = useMutation(DeleteEmployeeDocument)
+
   const refreshEmployees = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['employees'] })
+    await employeesQuery.refetch()
   }
 
   const departments = useMemo(() => {
-    const rows = employeesQuery.data ?? []
+    const rows = employeesQuery.data?.employees ?? []
     return [...new Set(rows.map((row) => row.department))].sort()
-  }, [employeesQuery.data])
+  }, [employeesQuery.data?.employees])
 
   const columns = useMemo<GridColDef<Employee>[]>(
     () => [
@@ -114,8 +118,9 @@ export function EmployeeListPage() {
     [role],
   )
 
-  const rows = employeesQuery.data ?? []
+  const rows = employeesQuery.data?.employees ?? []
   const queryError = employeesQuery.error
+  const apiError = queryError ? toGraphqlApiError(queryError) : null
 
   return (
     <Box sx={{ p: 3 }}>
@@ -181,15 +186,15 @@ export function EmployeeListPage() {
           </Button>
         </Stack>
 
-        {queryError instanceof EmployeesApiError && queryError.status === 401 && (
+        {apiError?.status === 401 && (
           <Alert severity="warning">Authentication required to view employees.</Alert>
         )}
-        {queryError instanceof EmployeesApiError && queryError.status === 403 && (
+        {apiError?.status === 403 && (
           <Alert severity="error">
             You are not authorized to view employees with this role.
           </Alert>
         )}
-        {queryError && !(queryError instanceof EmployeesApiError) && (
+        {queryError && !apiError && (
           <Alert severity="error">
             {queryError instanceof Error ? queryError.message : 'Failed to load employees'}
           </Alert>
@@ -199,14 +204,14 @@ export function EmployeeListPage() {
           <DataGrid
             rows={rows}
             columns={columns}
-            loading={employeesQuery.isLoading}
+            loading={employeesQuery.loading}
             getRowId={(row) => row.id}
             disableRowSelectionOnClick
             pageSizeOptions={[10, 25, 50]}
             initialState={{ pagination: { paginationModel: { pageSize: 10, page: 0 } } }}
             localeText={{
               noRowsLabel:
-                !employeesQuery.isLoading && rows.length === 0
+                !employeesQuery.loading && rows.length === 0
                   ? debouncedSearch || departmentFilter
                     ? 'No matching employees'
                     : 'No employees yet — create the first record'
@@ -222,11 +227,13 @@ export function EmployeeListPage() {
         mode={formMode}
         employee={selectedEmployee}
         onClose={() => setFormOpen(false)}
-        onSubmit={async (values) => {
+        onSubmit={async (values: EmployeeInput) => {
           if (formMode === 'create') {
-            await createEmployee(values, fetch, undefined, role)
+            await createEmployeeMutation({ variables: { input: values } })
           } else if (selectedEmployee) {
-            await updateEmployee(selectedEmployee.id, values, fetch, undefined, role)
+            await updateEmployeeMutation({
+              variables: { id: selectedEmployee.id, input: values },
+            })
           }
           await refreshEmployees()
         }}
@@ -237,10 +244,13 @@ export function EmployeeListPage() {
         employee={selectedEmployee}
         onClose={() => setDeleteOpen(false)}
         onConfirm={async (employee) => {
-          await deleteEmployee(employee.id, fetch, undefined, role)
+          await deleteEmployeeMutation({ variables: { id: employee.id } })
           await refreshEmployees()
         }}
       />
     </Box>
   )
 }
+
+// Re-export for tests that assert error class name
+export { GraphqlApiError }

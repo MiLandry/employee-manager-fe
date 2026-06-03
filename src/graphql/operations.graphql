@@ -1,0 +1,48 @@
+query Health {
+  health {
+    status
+    timestamp
+    message
+    db {
+      status
+      error
+    }
+  }
+}
+
+query Employees($name: String, $department: String) {
+  employees(name: $name, department: $department) {
+    ...EmployeeFields
+  }
+}
+
+mutation CreateEmployee($input: EmployeeInput!) {
+  createEmployee(input: $input) {
+    ...EmployeeFields
+  }
+}
+
+mutation UpdateEmployee($id: ID!, $input: EmployeeInput!) {
+  updateEmployee(id: $id, input: $input) {
+    ...EmployeeFields
+  }
+}
+
+mutation DeleteEmployee($id: ID!) {
+  deleteEmployee(id: $id)
+}
+
+fragment EmployeeFields on Employee {
+  id
+  fullName
+  email
+  department
+  jobTitle
+  employmentStatus
+  managerName
+  startDate
+  phone
+  location
+  createdAt
+  updatedAt
+}

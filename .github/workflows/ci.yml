@@ -25,11 +25,26 @@ jobs:
       - name: Checkout frontend
         uses: actions/checkout@v4
 
+      - name: Resolve system-specs ref
+        id: specs-ref
+        run: |
+          REF="${{ env.SYSTEM_SPECS_REF }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.head_ref }}"
+            if git ls-remote --heads "https://github.com/${{ env.SYSTEM_SPECS_REPO }}.git" "${BRANCH}" | grep -q .; then
+              echo "Using system-specs branch: ${BRANCH}"
+              REF="${BRANCH}"
+            else
+              echo "No system-specs branch ${BRANCH}; using ${REF}"
+            fi
+          fi
+          echo "ref=${REF}" >> "${GITHUB_OUTPUT}"
+
       - name: Checkout system-specs
         uses: actions/checkout@v4
         with:
           repository: ${{ env.SYSTEM_SPECS_REPO }}
-          ref: ${{ env.SYSTEM_SPECS_REF }}
+          ref: ${{ steps.specs-ref.outputs.ref }}
           path: system-specs
 
       - name: Link system-specs for codegen path
@@ -47,7 +62,7 @@ jobs:
         run: bun run lint
 
       - name: Test
-        run: bun test
+        run: bun run test
 
       - name: Build
         run: bun run build

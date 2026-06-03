@@ -11,13 +11,13 @@ import {
 import { useState } from 'react'
 import type {
   Employee,
-  EmployeeCreateRequest,
+  EmployeeInput,
   EmploymentStatus,
-} from '../services/employeesApi'
+} from '../generated/graphql/graphql'
 
-const EMPLOYMENT_STATUSES: EmploymentStatus[] = ['active', 'inactive', 'on_leave']
+const EMPLOYMENT_STATUSES = ['active', 'inactive', 'on_leave'] as const satisfies EmploymentStatus[]
 
-export type EmployeeFormValues = EmployeeCreateRequest
+export type EmployeeFormValues = EmployeeInput
 
 const toFormValues = (employee?: Employee | null): EmployeeFormValues => ({
   fullName: employee?.fullName ?? '',
