@@ -31,3 +31,4 @@ export const canCreateEmployees = (role: MockRole): boolean => role === 'admin'
 export const canUpdateEmployees = (role: MockRole): boolean =>
   role === 'admin' || role === 'manager'
 export const canDeleteEmployees = (role: MockRole): boolean => role === 'admin'
+export const canViewCompensation = (role: MockRole): boolean => role === 'admin'

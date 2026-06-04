@@ -19,6 +19,18 @@ export const MOCK_EMPLOYEES: Employee[] = [
     location: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
+    compensationSummary: {
+      __typename: 'CompensationSummary',
+      payGrade: 'L5',
+      currency: 'USD',
+      annualBase: 125000,
+    },
+    lastPayStub: {
+      __typename: 'PayStub',
+      periodEnd: '2026-05-15',
+      netPay: 8234.12,
+      currency: 'USD',
+    },
   },
   {
     __typename: 'Employee',
@@ -34,6 +46,18 @@ export const MOCK_EMPLOYEES: Employee[] = [
     location: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
+    compensationSummary: {
+      __typename: 'CompensationSummary',
+      payGrade: 'L4',
+      currency: 'USD',
+      annualBase: 98000,
+    },
+    lastPayStub: {
+      __typename: 'PayStub',
+      periodEnd: '2026-05-15',
+      netPay: 6120.55,
+      currency: 'USD',
+    },
   },
 ]
 
