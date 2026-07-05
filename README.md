@@ -29,8 +29,8 @@ Key architecture decisions:
 
 ## Development Tooling
 
-- `bun run dev` (or `bun dev`) — Vite dev server against a live BFF (MSW off).
-- `bun run dev:mock` — Vite `--mode mock`; starts MSW and mocks `GET /health`.
+- `bun run dev` (or `bun dev`) — runs `predev` (GraphQL codegen), then Vite dev server against a live BFF (MSW off).
+- `bun run dev:mock` — runs `predev:mock` (GraphQL codegen), then Vite `--mode mock`; starts MSW and mocks `GET /health`.
 - `bun run build`, `bun build:app`, or `bun run build:app` — runs `prebuild:app` (API codegen), then TypeScript check + Vite production bundle.
 - `bun run lint` — ESLint for TypeScript and React.
 - `bun test` — frontend tests (Bun test runner).

@@ -10,7 +10,7 @@ The BFF (Backend-For-Frontend) centralizes contract logic, aggregates data for t
 
 - Canonical schema: `system-specs/specs/architecture/010-graphql-apollo-protocol/contracts/schema.graphql`
 - Operations live in `src/graphql/*.graphql`; types and documents are generated to `src/generated/graphql/`
-- `bun run codegen:graphql` refreshes the Apollo client preset output
+- `bun run codegen:graphql` refreshes the Apollo client preset output; `predev`, `predev:mock`, `prebuild:app`, and `test` all run it automatically
 - Mock auth headers are attached on every request via Apollo `SetContextLink`
 
 ### Core operations
