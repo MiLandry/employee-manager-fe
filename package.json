@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "bun run codegen:graphql",
     "dev": "vite",
+    "predev:mock": "bun run codegen:graphql",
     "dev:mock": "vite --mode mock",
     "build": "bun run build:app",
     "prebuild:app": "bun run codegen:graphql",
