@@ -1,6 +1,6 @@
 # Employee Manager — Frontend
 
-Baseline React + TypeScript + Vite app that verifies BFF connectivity via `GET /health`, with optional [MSW](https://mswjs.io/) mocking for backend-free development.
+React + TypeScript + Vite app that talks to the BFF through a single GraphQL endpoint via [Apollo Client](https://www.apollographql.com/docs/react/), with optional [MSW](https://mswjs.io/) mocking for backend-free development. See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full GraphQL contract and tooling details.
 
 ## Environment variables
 
@@ -12,32 +12,36 @@ cp .env.example .env
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITE_API_BASE_URL` | `http://localhost:3000` | BFF base URL for API requests |
+| `VITE_GRAPHQL_URL` | `http://localhost:4000/graphql` | Apollo Router (GraphQL gateway) endpoint |
+| `VITE_MOCK_USER_ID` | `u-dev` | `x-mock-user-id` header sent on every request |
+| `VITE_MOCK_ROLES` | `admin` | Default `x-mock-roles` header when no UI role is set |
 
 MSW is controlled by scripts only (not env vars): use `bun run dev:mock` to enable mocking.
 
 ## Frontend Architecture
 
-This frontend is a React + TypeScript app built on Vite, with a BFF-style backend layer that exposes REST JSON endpoints. The UI is designed to consume backend APIs through a stable contract, while keeping frontend network dependencies isolated behind a small service abstraction.
+This frontend is a React + TypeScript app built on Vite. The UI talks to the BFF through a single GraphQL endpoint using Apollo Client; the BFF centralizes contract logic and keeps the frontend decoupled from downstream services.
 
 Key architecture decisions:
 
-- The UI uses a JSON REST contract against backend endpoints such as `/health` and `/api/*`.
-- A BFF-style backend layer is the source of truth for frontend API responses, allowing the frontend to remain decoupled from downstream services.
-- [Mock Service Worker (MSW)](https://mswjs.io/) intercepts API requests in development and tests so UI work can continue without a running backend.
+- The UI uses a single GraphQL endpoint (`VITE_GRAPHQL_URL`) via Apollo Client — there is no REST/JSON contract.
+- A BFF-style backend layer is the source of truth for the GraphQL schema, allowing the frontend to remain decoupled from downstream services.
+- [Mock Service Worker (MSW)](https://mswjs.io/) intercepts GraphQL requests in development and tests so UI work can continue without a running backend.
 - Bun is the chosen test harness runtime for frontend assertions.
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the GraphQL contract, codegen pipeline, and full tooling stack.
 
 ## Development Tooling
 
 - `bun run dev` (or `bun dev`) — runs `predev` (GraphQL codegen), then Vite dev server against a live BFF (MSW off).
-- `bun run dev:mock` — runs `predev:mock` (GraphQL codegen), then Vite `--mode mock`; starts MSW and mocks `GET /health`.
-- `bun run build`, `bun build:app`, or `bun run build:app` — runs `prebuild:app` (API codegen), then TypeScript check + Vite production bundle.
+- `bun run dev:mock` — runs `predev:mock` (GraphQL codegen), then Vite `--mode mock`; starts MSW and mocks GraphQL operations.
+- `bun run build`, `bun build:app`, or `bun run build:app` — runs `prebuild:app` (GraphQL codegen), then TypeScript check + Vite production bundle.
 - `bun run lint` — ESLint for TypeScript and React.
 - `bun test` — frontend tests (Bun test runner).
 - `bun run test:watch` — tests in watch mode.
 - `bun run msw:init` — (re)generate `public/mockServiceWorker.js`.
-- `bun run codegen:api` — regenerate `src/generated/openapi.ts` from the sibling `system-specs` spec 002 OpenAPI file (`prebuild:app` runs this before `build:app`).
-- `bun run clean` — remove `dist/`, `dist-ssr/`, `src/generated/` (OpenAPI client), and Vite/TypeScript caches under `node_modules`.
+- `bun run codegen:graphql` — regenerate `src/generated/graphql/` from the sibling `system-specs` GraphQL schema (see [ARCHITECTURE.md](./ARCHITECTURE.md) for the canonical schema path); `predev`, `predev:mock`, `prebuild:app`, and `test` all run this automatically.
+- `bun run clean` — remove `dist/`, `dist-ssr/`, `src/generated/` (GraphQL codegen output), and Vite/TypeScript caches under `node_modules`.
 - `bun run nuke` — `clean` plus remove `node_modules/`, then `bun install` (near–fresh-clone reset; keeps `bun.lock` and `.env`).
 
 ### Cleanup
@@ -47,7 +51,7 @@ Key architecture decisions:
 | `bun run clean` | `dist/`, `dist-ssr/`, `src/generated/`, `node_modules/.tmp/`, `node_modules/.vite/` | `node_modules/`, hand-written `src/`, lockfile, `.env` |
 | `bun run nuke` | everything `clean` removes, plus `node_modules/` (then reinstalls) | hand-written `src/`, `tests/`, `public/`, `bun.lock`, `.env` |
 
-After `clean` or `nuke`, run `bun run build:app` (or `bun run dev`) to regenerate `src/generated/openapi.ts` via `prebuild:app`. After `nuke`, you do not need `msw:init` again unless you deleted `public/mockServiceWorker.js`.
+After `clean` or `nuke`, run `bun run build:app` (or `bun run dev`) to regenerate `src/generated/graphql/` via `prebuild:app`. After `nuke`, you do not need `msw:init` again unless you deleted `public/mockServiceWorker.js`.
 
 > **Note:** `bun build` alone is Bun’s bundler CLI and will fail with “Missing entrypoints”. This project uses Vite; always run **`bun run build`** or **`bun build:app`**.
 
@@ -57,7 +61,7 @@ This repo includes a frontend-only GitHub Actions workflow at `.github/workflows
 
 - Trigger: `pull_request` and pushes to `main`
 - Checks: install dependencies, lint, test, build
-- Codegen dependency: CI checks out `system-specs` and links it to `../system-specs` so `codegen:api` can resolve the canonical OpenAPI path during build
+- Codegen dependency: CI checks out `system-specs` and links it to `../system-specs` so `codegen:graphql` can resolve the canonical GraphQL schema path during build
 - Fallback plan: if checkout/pathing fails in CI, temporarily gate on install/lint/test only, then restore build once the path issue is fixed
 - Deferred follow-up: multi-repo required-check governance and broader FE/BE policy hardening
 
@@ -72,10 +76,11 @@ bun run build
 
 ## API and Mocking (MSW)
 
-This project uses **Mock Service Worker** to mock the BFF health contract without changing production fetch code:
+This project uses **Mock Service Worker** to mock the GraphQL contract without changing production Apollo Client code:
 
-- `src/services/healthApi.ts` — health contract types and `fetchHealthStatus`
-- `src/mocks/handlers/health.ts` — MSW handlers for `GET /health`
+- `src/services/graphqlErrors.ts` — GraphQL error handling helpers
+- `src/services/mockAuth.ts` — mock auth header helpers (`x-mock-user-id`, `x-mock-roles`)
+- `src/mocks/handlers/graphql.ts` — MSW `graphql.link` handlers per operation name
 - `src/mocks/browser.ts` — browser worker (started only in `dev:mock` mode)
 - `src/mocks/server.ts` — `setupServer` for Bun tests
 
@@ -86,13 +91,13 @@ bun run msw:init
 cp .env.example .env
 ```
 
-Run dev with mocked health (no backend):
+Run dev with mocked GraphQL (no backend):
 
 ```bash
 bun run dev:mock
 ```
 
-See `system-specs/specs/architecture/001-baseline-app-poc/quickstart.md` for the full verification path.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full GraphQL contract and mocking details.
 
 ## React Compiler
 
